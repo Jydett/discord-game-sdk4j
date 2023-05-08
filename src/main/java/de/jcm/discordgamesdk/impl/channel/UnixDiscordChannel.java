@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
-import java.net.UnixDomainSocketAddress;
+import org.newsclub.net.unix.AFUNIXSocketAddress;
 
 public class UnixDiscordChannel implements DiscordChannel {
 	private final SocketChannel channel;
@@ -35,7 +35,7 @@ public class UnixDiscordChannel implements DiscordChannel {
 		{
 			path = path + "/discord-ipc-0";
 		}
-		channel = SocketChannel.open(UnixDomainSocketAddress.of(path));
+		channel = SocketChannel.open(AFUNIXSocketAddress.of(new File(path)));
 	}
 
 	public void close() throws IOException {

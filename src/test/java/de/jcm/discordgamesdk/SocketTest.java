@@ -11,7 +11,6 @@ import de.jcm.discordgamesdk.user.DiscordUser;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.net.UnixDomainSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
@@ -36,7 +35,8 @@ public class SocketTest
 			read += (int) channel.read(new ByteBuffer[]{data}, 0, 1);
 		}
 		while(read < length);
-		return new String(data.flip().array());
+      data.flip();
+      return new String(data.array());
 	}
 
 	void send(DiscordChannel channel, ConnectionState state, String message) throws IOException
@@ -47,8 +47,8 @@ public class SocketTest
 		buf.putInt(state.ordinal());
 		buf.putInt(bytes.length);
 		buf.put(bytes);
-
-		channel.write(buf.flip());
+        buf.flip();
+		channel.write(buf);
 	}
 
 	@Test

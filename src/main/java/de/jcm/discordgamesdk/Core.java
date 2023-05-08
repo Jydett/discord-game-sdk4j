@@ -13,7 +13,7 @@ import de.jcm.discordgamesdk.user.DiscordUser;
 import de.jcm.discordgamesdk.user.Relationship;
 
 import java.io.IOException;
-import java.net.UnixDomainSocketAddress;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.*;
@@ -134,19 +134,19 @@ public class Core implements AutoCloseable
 		this.voiceManager = new VoiceManager(corePrivate);
 	}
 
+    private static final DiscordEventAdapter NULL_ADAPTER = new DiscordEventAdapter(){};
+
 	public class CorePrivate
 	{
 		private CorePrivate() {}
 
 		public Queue<Runnable> workQueue = new ArrayDeque<>();
 
-		public int pid = (int) ProcessHandle.current().pid();
+		public int pid = JavaCompatibilityUtils.getProcessId();
 		public DiscordUser currentUser;
 		public Map<Long, Relationship> relationships = new HashMap<>();
 		public OverlayUpdateEvent.Data overlayData = new OverlayUpdateEvent.Data();
 		public VoiceSettingsUpdate2Event.Data voiceData = new VoiceSettingsUpdate2Event.Data();
-
-		private static final DiscordEventAdapter NULL_ADAPTER = new DiscordEventAdapter(){};
 		public DiscordEventAdapter getEventAdapter()
 		{
 			return Optional.ofNullable(eventAdapter).orElse(NULL_ADAPTER);
@@ -231,8 +231,8 @@ public class Core implements AutoCloseable
 		buf.putInt(state.ordinal());
 		buf.putInt(bytes.length);
 		buf.put(bytes);
-
-		channel.write(buf.flip());
+        buf.flip();
+		channel.write(buf);
 		corePrivate.log(LogLevel.VERBOSE, "Sent string \""+message+"\" at state "+state);
 	}
 
@@ -269,7 +269,8 @@ public class Core implements AutoCloseable
 			read += (int) channel.read(new ByteBuffer[]{data}, 0, 1);
 		}
 		while(read < length);
-		String s = new String(data.flip().array());
+        data.flip();
+        String s = new String(data.array());
 		ConnectionState state1 = ConnectionState.values()[status];
 
 		corePrivate.log(LogLevel.VERBOSE, "Received string \""+s+"\" at state "+state1);
